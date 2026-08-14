@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Schedule - Fixed Colors</title>
+    <title>Cloud Work Schedule</title>
+    <!-- استدعاء مكتبات Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 10px; background-color: #e9f0f5; }
-        .controls { background: #d9edf7; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; align-items: center; gap: 15px; border: 1px solid #bce8f1; }
+        .controls { background: #d9edf7; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; align-items: center; gap: 15px; border: 1px solid #bce8f1; flex-wrap: wrap; }
         
         table { border-collapse: collapse; width: 100%; font-size: 13px; background: white; }
         th, td { border: 1px solid #777; text-align: center; padding: 4px; height: 28px; }
@@ -15,40 +19,41 @@
         .header-days { background-color: #fff9c4; }
         .header-sub { background-color: #e8f5e9; }
 
-        /* ألوان الصفوف الأساسية */
         .row-blue { background-color: #b3e5fc; }
         .row-grey { background-color: #cfd8dc; }
         .row-orange { background-color: #ffe0b2; }
         .row-pink { background-color: #f8bbd0; }
 
-        /* شكل الـ Annual Leave (الأخضر المطلوب) */
-        .annual-leave { 
-            background-color: #00c853 !important; /* لون أخضر زاهي */
-            color: white !important; 
-            font-weight: bold !important;
-            text-transform: capitalize;
-        }
-
-        .day-off { 
-            background-color: #00b0ff !important; 
-            color: black !important; 
-            font-weight: bold !important;
-        }
+        .annual-leave { background-color: #00c853 !important; color: white !important; font-weight: bold !important; text-transform: capitalize; }
+        .day-off { background-color: #00b0ff !important; color: black !important; font-weight: bold !important; }
 
         [contenteditable="true"] { outline: none; cursor: text; }
-        [contenteditable="true"]:focus { background: white !important; color: black; box-shadow: inset 0 0 3px #000; }
+        [contenteditable="true"]:focus { background: #fffde7 !important; color: black; box-shadow: inset 0 0 5px #000; }
+
+        .btn-save { background-color: #2e7d32; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-save:hover { background-color: #1b5e20; }
+        .btn-clear { background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        #syncIndicator { font-size: 12px; font-weight: bold; padding: 5px; border-radius: 4px; }
+        .synced { color: #2e7d32; }
+        .saving { color: #f57c00; }
 
         @media print { .controls { display: none; } body { margin: 0; } }
-        
     </style>
 </head>
 <body>
 
 <div class="controls">
     <strong>📅 Start Date:</strong>
-    <input type="date" id="startDate" onchange="updateDates()" value="2025-08-08">
+    <input type="date" id="startDate" onchange="updateDatesAndSave()" value="2025-08-08">
     <span id="rangeLabel" style="font-weight: bold; color: #31708f;">From 8 Aug To 14 Aug</span>
-    <button onclick="window.print()" style="margin-left:auto; cursor:pointer;">Print / Save PDF</button>
+    
+    <div id="syncIndicator" class="synced">Cloud Connected ✅</div>
+
+    <!-- زر الحفظ اليدوي الجديد -->
+    <button onclick="saveToCloud(true)" class="btn-save">Save Now 💾</button>
+
+    <button onclick="window.print()" style="margin-left:auto; cursor:pointer; padding: 5px 15px;">Print / Save PDF</button>
+    <button onclick="resetTable()" class="btn-clear">Reset All Data</button>
 </div>
 
 <table id="scheduleTable">
@@ -73,127 +78,157 @@
 </table>
 
 <script>
-    const data = [
-        { n: "Yara Ayman", p: "Agent (Whatsapp)", s: "row-blue", d: [""] },
-        { n: "Nada Serag", p: "Agent (CS)", s: "row-blue", d: [""] },
-        { n: "Nagham", p: "Agent (CS)", s: "row-blue", d: [""] },
-        { n: "Aya Salah", p: "Agent(Talabat)", s: "row-blue", d: [""] },
-        { n: "Shereen Essam", p: "Agent", s: "row-grey", d: [""] },
-        { n: "Samar Mohamed", p: "Agent", s: "row-orange", d: [""] },
-        { n: "Reham Wageh", p: "Agent", s: "row-orange", d: [""] },
-        { n: "Salma Mahmoud", p: "Agent", s: "row-orange", d: [""] },
-        { n: "Sara Ayman", p: "Agent", s: "row-blue", d: [""] },
-        { n: "Malak Soliman", p: "Agent", s: "row-pink", d: [""] },
-        { n: "Ashraf Ayman", p: "Agent", s: "row-grey", d: [""] },
-        { n: "Samar Sayed", p: "Agent", s: "row-blue", d: [""] },
-        { n: "Hafsa Rabiaa", p: "Agent", s: "row-blue", d: [""] },
-        { n: "Habiba Ahmed", p: "Agent", s: "row-orange", d: [""] },
-        { n: "Karim Mamdouh", p: "Agent", s: "row-grey", d: [""] }
+    // 1. Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyA6exXjSwQCxpi1exR4HBXxOEeO_r34jOQ",
+        authDomain: "studio-8662573251-95f15.firebaseapp.com",
+        projectId: "studio-8662573251-95f15",
+        storageBucket: "studio-8662573251-95f15.firebasestorage.app",
+        messagingSenderId: "781647119963",
+        appId: "1:781647119963:web:5a7d5ee83e0916da0ee17e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const docRef = db.collection("work_schedules").doc("global_live_data");
+
+    const defaultNames = [
+        { n: "Yara Ayman", p: "Agent (Whatsapp)", s: "row-blue" },
+        { n: "Nada Serag", p: "Agent (CS)", s: "row-blue" },
+        { n: "Nagham", p: "Agent (CS)", s: "row-blue" },
+        { n: "Aya Salah", p: "Agent(Talabat)", s: "row-blue" },
+        { n: "Shereen Essam", p: "Agent", s: "row-grey" },
+        { n: "Samar Mohamed", p: "Agent", s: "row-orange" },
+        { n: "Reham Wageh", p: "Agent", s: "row-orange" },
+        { n: "Salma Mahmoud", p: "Agent", s: "row-orange" },
+        { n: "Sara Ayman", p: "Agent", s: "row-blue" },
+        { n: "Malak Soliman", p: "Agent", s: "row-pink" },
+        { n: "Ashraf Ayman", p: "Agent", s: "row-grey" },
+        { n: "Samar Sayed", p: "Agent", s: "row-blue" },
+        { n: "Hafsa Rabiaa", p: "Agent", s: "row-blue" },
+        { n: "Habiba Ahmed", p: "Agent", s: "row-orange" },
+        { n: "Karim Mamdouh", p: "Agent", s: "row-grey" }
     ];
 
-    function buildTable() {
+    function buildEmptyTable() {
         const body = document.getElementById('tableBody');
         body.innerHTML = "";
-        data.forEach((item, index) => {
+        defaultNames.forEach((item, index) => {
             let row = document.createElement('tr');
             row.className = item.s;
             let html = `<td>${index + 1}</td><td contenteditable="true">${item.n}</td><td contenteditable="true">${item.p}</td>`;
-            
-            let dIdx = 0;
-            for (let i = 0; i < 7; i++) {
-                let val = item.d[dIdx];
-                if (val === "OFF") {
-                    html += `<td colspan="2" class="day-off" contenteditable="true">DAY OFF</td>`;
-                    dIdx++;
-                } else if (val === "ANNUAL") {
-                    if (item.n === "Samar Sayed" && i === 2) { 
-                        html += `<td colspan="8" class="annual-leave" contenteditable="true">Annual Leave</td>`;
-                        dIdx += 4; i += 3;
-                    } else {
-                        html += `<td colspan="2" class="annual-leave" contenteditable="true">Annual Leave</td>`;
-                        dIdx++;
-                    }
-                } else {
-                    html += `<td contenteditable="true">${item.d[dIdx] || ""}</td><td contenteditable="true">${item.d[dIdx+1] || ""}</td>`;
-                    dIdx += 2;
-                }
+            for (let i = 0; i < 14; i++) {
+                html += `<td contenteditable="true"></td>`;
             }
             row.innerHTML = html;
             body.appendChild(row);
         });
     }
 
-    // هذه الوظيفة تجعل أي خلية تكتب فيها كلمة ANNUAL تتحول فوراً للون الأخضر
-   document.addEventListener('input', function(e) {
-    if (!e.target.hasAttribute('contenteditable')) return;
-    
-    let cell = e.target;
-    let text = cell.innerText.trim().toUpperCase();
+    // تعديل وظيفة الحفظ لتدعم الحفظ الفوري عند الضغط على الزر
+    let debounceTimer;
+    function saveToCloud(immediate = false) {
+        document.getElementById('syncIndicator').innerText = "Saving to Cloud... ⏳";
+        document.getElementById('syncIndicator').className = "saving";
 
-    // 1. خريطة الشيفتات (التعبئة التلقائية للوقت)
-    const shiftMapping = {
-        "7": "15:00",
-        "7:00": "15:00",
-        "07:00": "15:00",
-        "8": "16:00",
-        "8:00": "16:00",
-        "08:00": "16:00",
-        "9": "17:00",
-        "9:00": "17:00",
-        "09:00": "17:00",
-        "10": "18:00",
-        "10:00": "18:00",
-        "12:30": "20:30"
-    };
+        const performSave = () => {
+            const tableHTML = document.getElementById('tableBody').innerHTML;
+            const startDate = document.getElementById('startDate').value;
 
-    // إذا كتبنا رقم الشيفت في خانة الـ (From)، يملأ خانة الـ (To) تلقائياً
-    if (shiftMapping[text]) {
-        let nextCell = cell.nextElementSibling;
-        // التأكد أن الخلية التالية هي خلية توقيت وليست مدمجة (OFF أو ANNUAL)
-        if (nextCell && nextCell.tagName === "TD" && nextCell.colSpan === 1) {
-            nextCell.innerText = shiftMapping[text];
-            
-            // اختيارياً: تحويل الـ 7 لـ 7:00 بشكل جمالي
-            if (!text.includes(":")) {
-                cell.innerText = text + ":00";
-            }
+            docRef.set({
+                content: tableHTML,
+                startDate: startDate,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                document.getElementById('syncIndicator').innerText = "All Changes Saved ✅";
+                document.getElementById('syncIndicator').className = "synced";
+            }).catch((error) => {
+                console.error("Error saving:", error);
+                document.getElementById('syncIndicator').innerText = "Error Saving! ❌";
+            });
+        };
+
+        if (immediate) {
+            clearTimeout(debounceTimer);
+            performSave();
+        } else {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(performSave, 2000); // الحفظ التلقائي بعد ثانيتين من التوقف عن الكتابة
         }
     }
-
-    // 2. منطق الـ Annual Leave (الأخضر)
-    if (text === "ANNUAL" || text === "ANNUAL LEAVE") {
-        cell.innerText = "Annual Leave";
-        cell.className = "annual-leave";
-        if (cell.colSpan === 1) {
-            let next = cell.nextElementSibling;
-            if (next && next.tagName === "TD") { cell.colSpan = 2; next.remove(); }
-        }
-    } 
-    // 3. منطق الـ DAY OFF (الأزرق)
-    else if (text === "OFF" || text === "DAY OFF") {
-        cell.innerText = "DAY OFF";
-        cell.className = "day-off";
-        if (cell.colSpan === 1) {
-            let next = cell.nextElementSibling;
-            if (next && next.tagName === "TD") { cell.colSpan = 2; next.remove(); }
-        }
-    }
-});
 
     function updateDates() {
         const startVal = document.getElementById('startDate').value;
         if (!startVal) return;
         let d = new Date(startVal);
         let opt = { day: 'numeric', month: 'short' };
+        let firstDate = "", lastDate = "";
+
         for (let i = 0; i < 7; i++) {
             let curr = new Date(d);
             curr.setDate(d.getDate() + i);
-            document.getElementById('d' + i).innerText = curr.toLocaleDateString('en-GB', opt).replace(' ', '/');
+            let dateStr = curr.toLocaleDateString('en-GB', opt).replace(' ', '/');
+            document.getElementById('d' + i).innerText = dateStr;
+            if(i === 0) firstDate = dateStr;
+            if(i === 6) lastDate = dateStr;
+        }
+        document.getElementById('rangeLabel').innerText = `From ${firstDate} To ${lastDate}`;
+    }
+
+    function updateDatesAndSave() {
+        updateDates();
+        saveToCloud(true);
+    }
+
+    function resetTable() {
+        if(confirm("This will clear the schedule for EVERYONE. Continue?")) {
+            buildEmptyTable();
+            saveToCloud(true);
         }
     }
 
-    window.onload = () => { buildTable(); updateDates(); };
+    document.addEventListener('input', function(e) {
+        if (!e.target.hasAttribute('contenteditable')) return;
+        
+        let cell = e.target;
+        let text = cell.innerText.trim().toUpperCase();
+
+        const shifts = { "7":"15:00", "8":"16:00", "9":"17:00", "10":"18:00", "12:30":"20:30" };
+        if (shifts[text]) {
+            let next = cell.nextElementSibling;
+            if (next && next.tagName === "TD") {
+                next.innerText = shifts[text];
+                if (!text.includes(":")) cell.innerText = text + ":00";
+            }
+        }
+
+        if (text === "ANNUAL" || text === "OFF" || text === "DAY OFF") {
+            cell.innerText = text.includes("ANNUAL") ? "Annual Leave" : "DAY OFF";
+            cell.className = text.includes("ANNUAL") ? "annual-leave" : "day-off";
+            if (cell.colSpan === 1) {
+                let next = cell.nextElementSibling;
+                if (next) { cell.colSpan = 2; next.remove(); }
+            }
+        }
+        saveToCloud(); // حفظ تلقائي بـ debounce
+    });
+
+    window.onload = () => {
+        docRef.onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (document.activeElement.tagName !== 'TD') {
+                    document.getElementById('tableBody').innerHTML = data.content;
+                    document.getElementById('startDate').value = data.startDate;
+                    updateDates();
+                }
+            } else {
+                buildEmptyTable();
+                updateDates();
+            }
+        });
+    };
 </script>
 
-</body> 
+</body>
 </html>
