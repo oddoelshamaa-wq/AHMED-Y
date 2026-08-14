@@ -123,38 +123,61 @@
     }
 
     // هذه الوظيفة تجعل أي خلية تكتب فيها كلمة ANNUAL تتحول فوراً للون الأخضر
-    document.addEventListener('input', function(e) {
-        if (!e.target.hasAttribute('contenteditable')) return;
-        let text = e.target.innerText.toUpperCase();
-        
-        if (text === "ANNUAL" || text === "ANNUAL LEAVE") {
-            e.target.innerText = "Annual Leave";
-            e.target.className = "annual-leave";
-            // دمج الخلايا تلقائياً إذا كانت خلية واحدة
-            if (e.target.colSpan === 1) {
-                let next = e.target.nextElementSibling;
-                if (next && next.tagName === "TD") {
-                    e.target.colSpan = 2;
-                    next.remove();
-                }
-            }
-        } else if (text === "OFF" || text === "DAY OFF") {
-            e.target.innerText = "DAY OFF";
-            e.target.className = "day-off";
-            if (e.target.colSpan === 1) {
-                let next = e.target.nextElementSibling;
-                if (next && next.tagName === "TD") {
-                    e.target.colSpan = 2;
-                    next.remove();
-                }
-            }
-        } else {
-            // إذا مسح النص يرجع اللون العادي
-            if (e.target.className === "annual-leave" || e.target.className === "day-off") {
-                e.target.className = "";
+   document.addEventListener('input', function(e) {
+    if (!e.target.hasAttribute('contenteditable')) return;
+    
+    let cell = e.target;
+    let text = cell.innerText.trim().toUpperCase();
+
+    // 1. خريطة الشيفتات (التعبئة التلقائية للوقت)
+    const shiftMapping = {
+        "7": "15:00",
+        "7:00": "15:00",
+        "07:00": "15:00",
+        "8": "16:00",
+        "8:00": "16:00",
+        "08:00": "16:00",
+        "9": "17:00",
+        "9:00": "17:00",
+        "09:00": "17:00",
+        "10": "18:00",
+        "10:00": "18:00",
+        "12:30": "20:30"
+    };
+
+    // إذا كتبنا رقم الشيفت في خانة الـ (From)، يملأ خانة الـ (To) تلقائياً
+    if (shiftMapping[text]) {
+        let nextCell = cell.nextElementSibling;
+        // التأكد أن الخلية التالية هي خلية توقيت وليست مدمجة (OFF أو ANNUAL)
+        if (nextCell && nextCell.tagName === "TD" && nextCell.colSpan === 1) {
+            nextCell.innerText = shiftMapping[text];
+            
+            // اختيارياً: تحويل الـ 7 لـ 7:00 بشكل جمالي
+            if (!text.includes(":")) {
+                cell.innerText = text + ":00";
             }
         }
-    });
+    }
+
+    // 2. منطق الـ Annual Leave (الأخضر)
+    if (text === "ANNUAL" || text === "ANNUAL LEAVE") {
+        cell.innerText = "Annual Leave";
+        cell.className = "annual-leave";
+        if (cell.colSpan === 1) {
+            let next = cell.nextElementSibling;
+            if (next && next.tagName === "TD") { cell.colSpan = 2; next.remove(); }
+        }
+    } 
+    // 3. منطق الـ DAY OFF (الأزرق)
+    else if (text === "OFF" || text === "DAY OFF") {
+        cell.innerText = "DAY OFF";
+        cell.className = "day-off";
+        if (cell.colSpan === 1) {
+            let next = cell.nextElementSibling;
+            if (next && next.tagName === "TD") { cell.colSpan = 2; next.remove(); }
+        }
+    }
+});
 
     function updateDates() {
         const startVal = document.getElementById('startDate').value;
