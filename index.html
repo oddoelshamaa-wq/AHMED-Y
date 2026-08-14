@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Work Schedule</title>
-    <!-- استدعاء مكتبات Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -12,32 +11,34 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 10px; background-color: #e9f0f5; }
         .controls { background: #d9edf7; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; align-items: center; gap: 15px; border: 1px solid #bce8f1; flex-wrap: wrap; }
         
-        table { border-collapse: collapse; width: 100%; font-size: 13px; background: white; }
-        th, td { border: 1px solid #777; text-align: center; padding: 4px; height: 28px; }
+        table { border-collapse: collapse; width: 100%; font-size: 13px; background: white; table-layout: fixed; }
+        th, td { border: 1px solid #777; text-align: center; padding: 4px; height: 28px; overflow: hidden; position: relative; }
 
         .header-main { background-color: #dcedc8; font-weight: bold; }
-        .header-days { background-color: #fff9c4; }
-        .header-sub { background-color: #e8f5e9; }
+        .header-days { background-color: #fff9c4; font-size: 11px; }
+        .header-sub { background-color: #e8f5e9; font-size: 10px; }
 
         .row-blue { background-color: #b3e5fc; }
         .row-grey { background-color: #cfd8dc; }
         .row-orange { background-color: #ffe0b2; }
         .row-pink { background-color: #f8bbd0; }
+        .row-new { background-color: #ffffff; }
 
-        .annual-leave { background-color: #00c853 !important; color: white !important; font-weight: bold !important; text-transform: capitalize; }
-        .day-off { background-color: #00b0ff !important; color: black !important; font-weight: bold !important; }
+        .annual-leave { background-color: #00c853 !important; color: white !important; font-weight: bold !important; font-size: 10px; text-transform: uppercase; }
+        .day-off { background-color: #00b0ff !important; color: black !important; font-weight: bold !important; font-size: 10px; text-transform: uppercase; }
 
         [contenteditable="true"] { outline: none; cursor: text; }
         [contenteditable="true"]:focus { background: #fffde7 !important; color: black; box-shadow: inset 0 0 5px #000; }
 
-        .btn-save { background-color: #2e7d32; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-save:hover { background-color: #1b5e20; }
         .btn-clear { background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-add { background-color: #4caf50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background-color: transparent; color: #f44336; border: none; cursor: pointer; font-weight: bold; font-size: 16px; padding: 0; }
+        .btn-delete:hover { color: black; }
+
         #syncIndicator { font-size: 12px; font-weight: bold; padding: 5px; border-radius: 4px; }
         .synced { color: #2e7d32; }
-        .saving { color: #f57c00; }
 
-        @media print { .controls { display: none; } body { margin: 0; } }
+        @media print { .controls, .btn-delete, .col-action { display: none !important; } table { width: 100%; } }
     </style>
 </head>
 <body>
@@ -45,30 +46,28 @@
 <div class="controls">
     <strong>📅 Start Date:</strong>
     <input type="date" id="startDate" onchange="updateDatesAndSave()" value="2025-08-08">
-    <span id="rangeLabel" style="font-weight: bold; color: #31708f;">From 8 Aug To 14 Aug</span>
-    
+    <span id="rangeLabel" style="font-weight: bold; color: #31708f;"></span>
     <div id="syncIndicator" class="synced">Cloud Connected ✅</div>
-
-    <!-- زر الحفظ اليدوي الجديد -->
-    <button onclick="saveToCloud(true)" class="btn-save">Save Now 💾</button>
-
-    <button onclick="window.print()" style="margin-left:auto; cursor:pointer; padding: 5px 15px;">Print / Save PDF</button>
-    <button onclick="resetTable()" class="btn-clear">Reset All Data</button>
+    
+    <button onclick="addNewRow()" class="btn-add">+ Add Employee</button>
+    <button onclick="window.print()" style="margin-left:auto; cursor:pointer; padding: 5px 15px;">Print</button>
+    <button onclick="resetTable()" class="btn-clear">Reset All</button>
 </div>
 
 <table id="scheduleTable">
     <thead>
         <tr class="header-main">
-            <th rowspan="2">#</th>
-            <th rowspan="2" style="width:150px">Name</th>
-            <th rowspan="2" style="width:130px">Position</th>
-            <th colspan="2" class="header-days">Saturday <div id="d0">8/Aug</div></th>
-            <th colspan="2" class="header-days">Sunday <div id="d1">9/Aug</div></th>
-            <th colspan="2" class="header-days">Monday <div id="d2">10/Aug</div></th>
-            <th colspan="2" class="header-days">Tuesday <div id="d3">11/Aug</div></th>
-            <th colspan="2" class="header-days">Wednesday <div id="d4">12/Aug</div></th>
-            <th colspan="2" class="header-days">Thursday <div id="d5">13/Aug</div></th>
-            <th colspan="2" class="header-days">Friday <div id="d6">14/Aug</div></th>
+            <th rowspan="2" style="width:30px">#</th>
+            <th rowspan="2" style="width:130px">Name</th>
+            <th rowspan="2" style="width:110px">Position</th>
+            <th colspan="2" class="header-days">Saturday <div id="d0"></div></th>
+            <th colspan="2" class="header-days">Sunday <div id="d1"></div></th>
+            <th colspan="2" class="header-days">Monday <div id="d2"></div></th>
+            <th colspan="2" class="header-days">Tuesday <div id="d3"></div></th>
+            <th colspan="2" class="header-days">Wednesday <div id="d4"></div></th>
+            <th colspan="2" class="header-days">Thursday <div id="d5"></div></th>
+            <th colspan="2" class="header-days">Friday <div id="d6"></div></th>
+            <th rowspan="2" class="col-action" style="width:40px">Action</th>
         </tr>
         <tr class="header-sub">
             <th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th>
@@ -78,7 +77,6 @@
 </table>
 
 <script>
-    // 1. Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyA6exXjSwQCxpi1exR4HBXxOEeO_r34jOQ",
         authDomain: "studio-8662573251-95f15.firebaseapp.com",
@@ -92,99 +90,55 @@
     const db = firebase.firestore();
     const docRef = db.collection("work_schedules").doc("global_live_data");
 
-    const defaultNames = [
-        { n: "Yara Ayman", p: "Agent (Whatsapp)", s: "row-blue" },
-        { n: "Nada Serag", p: "Agent (CS)", s: "row-blue" },
-        { n: "Nagham", p: "Agent (CS)", s: "row-blue" },
-        { n: "Aya Salah", p: "Agent(Talabat)", s: "row-blue" },
-        { n: "Shereen Essam", p: "Agent", s: "row-grey" },
-        { n: "Samar Mohamed", p: "Agent", s: "row-orange" },
-        { n: "Reham Wageh", p: "Agent", s: "row-orange" },
-        { n: "Salma Mahmoud", p: "Agent", s: "row-orange" },
-        { n: "Sara Ayman", p: "Agent", s: "row-blue" },
-        { n: "Malak Soliman", p: "Agent", s: "row-pink" },
-        { n: "Ashraf Ayman", p: "Agent", s: "row-grey" },
-        { n: "Samar Sayed", p: "Agent", s: "row-blue" },
-        { n: "Hafsa Rabiaa", p: "Agent", s: "row-blue" },
-        { n: "Habiba Ahmed", p: "Agent", s: "row-orange" },
-        { n: "Karim Mamdouh", p: "Agent", s: "row-grey" }
-    ];
+    function createRowHtml(index, name = "", position = "", rowClass = "row-new") {
+        let cells = "";
+        for (let i = 0; i < 14; i++) {
+            cells += `<td contenteditable="true"></td>`;
+        }
+        return `
+            <tr class="${rowClass}">
+                <td class="row-index">${index}</td>
+                <td contenteditable="true">${name}</td>
+                <td contenteditable="true">${position}</td>
+                ${cells}
+                <td class="col-action"><button class="btn-delete" onclick="deleteRow(this)">❌</button></td>
+            </tr>`;
+    }
 
-    function buildEmptyTable() {
+    function addNewRow() {
         const body = document.getElementById('tableBody');
-        body.innerHTML = "";
-        defaultNames.forEach((item, index) => {
-            let row = document.createElement('tr');
-            row.className = item.s;
-            let html = `<td>${index + 1}</td><td contenteditable="true">${item.n}</td><td contenteditable="true">${item.p}</td>`;
-            for (let i = 0; i < 14; i++) {
-                html += `<td contenteditable="true"></td>`;
-            }
-            row.innerHTML = html;
-            body.appendChild(row);
+        const index = body.rows.length + 1;
+        body.insertAdjacentHTML('beforeend', createRowHtml(index));
+        saveToCloud();
+    }
+
+    function deleteRow(btn) {
+        if(confirm("Delete this employee?")) {
+            btn.closest('tr').remove();
+            reIndexRows();
+            saveToCloud();
+        }
+    }
+
+    function reIndexRows() {
+        const rows = document.querySelectorAll('#tableBody tr');
+        rows.forEach((row, idx) => {
+            row.querySelector('.row-index').innerText = idx + 1;
         });
     }
 
-    // تعديل وظيفة الحفظ لتدعم الحفظ الفوري عند الضغط على الزر
     let debounceTimer;
-    function saveToCloud(immediate = false) {
-        document.getElementById('syncIndicator').innerText = "Saving to Cloud... ⏳";
-        document.getElementById('syncIndicator').className = "saving";
-
-        const performSave = () => {
-            const tableHTML = document.getElementById('tableBody').innerHTML;
-            const startDate = document.getElementById('startDate').value;
-
+    function saveToCloud() {
+        document.getElementById('syncIndicator').innerText = "Saving... ⏳";
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
             docRef.set({
-                content: tableHTML,
-                startDate: startDate,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                content: document.getElementById('tableBody').innerHTML,
+                startDate: document.getElementById('startDate').value
             }).then(() => {
-                document.getElementById('syncIndicator').innerText = "All Changes Saved ✅";
-                document.getElementById('syncIndicator').className = "synced";
-            }).catch((error) => {
-                console.error("Error saving:", error);
-                document.getElementById('syncIndicator').innerText = "Error Saving! ❌";
+                document.getElementById('syncIndicator').innerText = "All Saved ✅";
             });
-        };
-
-        if (immediate) {
-            clearTimeout(debounceTimer);
-            performSave();
-        } else {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(performSave, 2000); // الحفظ التلقائي بعد ثانيتين من التوقف عن الكتابة
-        }
-    }
-
-    function updateDates() {
-        const startVal = document.getElementById('startDate').value;
-        if (!startVal) return;
-        let d = new Date(startVal);
-        let opt = { day: 'numeric', month: 'short' };
-        let firstDate = "", lastDate = "";
-
-        for (let i = 0; i < 7; i++) {
-            let curr = new Date(d);
-            curr.setDate(d.getDate() + i);
-            let dateStr = curr.toLocaleDateString('en-GB', opt).replace(' ', '/');
-            document.getElementById('d' + i).innerText = dateStr;
-            if(i === 0) firstDate = dateStr;
-            if(i === 6) lastDate = dateStr;
-        }
-        document.getElementById('rangeLabel').innerText = `From ${firstDate} To ${lastDate}`;
-    }
-
-    function updateDatesAndSave() {
-        updateDates();
-        saveToCloud(true);
-    }
-
-    function resetTable() {
-        if(confirm("This will clear the schedule for EVERYONE. Continue?")) {
-            buildEmptyTable();
-            saveToCloud(true);
-        }
+        }, 1000); 
     }
 
     document.addEventListener('input', function(e) {
@@ -193,7 +147,8 @@
         let cell = e.target;
         let text = cell.innerText.trim().toUpperCase();
 
-        const shifts = { "7":"15:00", "8":"16:00", "9":"17:00", "10":"18:00", "12:30":"20:30" };
+        // Auto shift conversion
+        const shifts = { "7":"15:00", "8":"16:00", "9":"17:00", "10":"18:00", "12":"20:00" };
         if (shifts[text]) {
             let next = cell.nextElementSibling;
             if (next && next.tagName === "TD") {
@@ -202,28 +157,55 @@
             }
         }
 
-        if (text === "ANNUAL" || text === "OFF" || text === "DAY OFF") {
-            cell.innerText = text.includes("ANNUAL") ? "Annual Leave" : "DAY OFF";
-            cell.className = text.includes("ANNUAL") ? "annual-leave" : "day-off";
+        // OFF and Annual handling
+        if (text === "OFF" || text === "ANNUAL" || text === "A") {
+            let isAnnual = text.startsWith("A");
+            cell.innerText = isAnnual ? "Annual Leave" : "DAY OFF";
+            cell.className = isAnnual ? "annual-leave" : "day-off";
             if (cell.colSpan === 1) {
                 let next = cell.nextElementSibling;
-                if (next) { cell.colSpan = 2; next.remove(); }
+                if (next && next.tagName === "TD") {
+                    cell.colSpan = 2;
+                    next.style.display = "none"; 
+                }
             }
+        } else if (text === "" && cell.colSpan === 2) {
+            cell.colSpan = 1;
+            cell.className = "";
+            let next = cell.nextElementSibling;
+            if (next) next.style.display = "";
         }
-        saveToCloud(); // حفظ تلقائي بـ debounce
+
+        saveToCloud();
     });
+
+    function updateDates() {
+        const startVal = document.getElementById('startDate').value;
+        if (!startVal) return;
+        let d = new Date(startVal);
+        let opt = { day: 'numeric', month: 'short' };
+        for (let i = 0; i < 7; i++) {
+            let curr = new Date(d);
+            curr.setDate(d.getDate() + i);
+            document.getElementById('d' + i).innerText = curr.toLocaleDateString('en-GB', opt).replace(' ', '/');
+        }
+    }
+
+    function updateDatesAndSave() { updateDates(); saveToCloud(); }
+
+    function resetTable() {
+        if(confirm("This will clear EVERYTHING. Are you sure?")) {
+            document.getElementById('tableBody').innerHTML = "";
+            saveToCloud();
+        }
+    }
 
     window.onload = () => {
         docRef.onSnapshot((doc) => {
-            if (doc.exists) {
+            if (doc.exists && document.activeElement.tagName !== 'TD') {
                 const data = doc.data();
-                if (document.activeElement.tagName !== 'TD') {
-                    document.getElementById('tableBody').innerHTML = data.content;
-                    document.getElementById('startDate').value = data.startDate;
-                    updateDates();
-                }
-            } else {
-                buildEmptyTable();
+                document.getElementById('tableBody').innerHTML = data.content;
+                document.getElementById('startDate').value = data.startDate;
                 updateDates();
             }
         });
