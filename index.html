@@ -3,152 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule Manager</title>
+    <title>Work Schedule - Exact Match</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f0f0f0; }
-        .controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 10px; background-color: #e9f0f5; }
+        .controls { background: #d9edf7; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; align-items: center; gap: 15px; border: 1px solid #bce8f1; }
         
-        .table-container { background-color: white; padding: 5px; border-radius: 4px; overflow-x: auto; }
-        table { border-collapse: collapse; width: 100%; min-width: 1200px; font-size: 13px; border: 1px solid #999; }
-        
-        th, td { border: 1px solid #555; text-align: center; padding: 4px; height: 25px; }
+        table { border-collapse: collapse; width: 100%; font-size: 13px; background: white; }
+        th, td { border: 1px solid #777; text-align: center; padding: 4px; height: 28px; }
 
-        /* الألوان حسب الصورة */
-        .header-top { background-color: #d1e9f5; font-weight: bold; font-size: 16px; }
-        .col-header { background-color: #e2efda; } /* أخضر فاتح للأسماء */
-        .day-header { background-color: #fff2cc; } /* أصفر فاتح للأيام */
-        .sub-header { background-color: #e2efda; }
+        /* ألوان الهيدر العلوي */
+        .header-main { background-color: #dcedc8; font-weight: bold; }
+        .header-days { background-color: #fff9c4; }
+        .header-sub { background-color: #e8f5e9; }
 
-        /* ألوان الشفتات */
-        .blue-row { background-color: #c6e0f5; }
-        .grey-row { background-color: #a6a6a6; color: black; }
-        .orange-row { background-color: #fbe5d6; }
-        .pink-row { background-color: #fce4d6; }
-        
-        /* الحالات الخاصة */
-        .day-off { background-color: #00b0f0 !important; color: black; font-weight: bold; }
-        .annual-leave { background-color: #00b050 !important; color: white; font-weight: bold; }
+        /* ألوان الصفوف حسب الصورة بالضبط */
+        .row-blue { background-color: #b3e5fc; } /* صفوف يارا، ندى، نغم... */
+        .row-grey { background-color: #cfd8dc; } /* صفوف شيرين، أشرف، كريم */
+        .row-orange { background-color: #ffe0b2; } /* صفوف سمر، ريهام، سلمى */
+        .row-pink { background-color: #f8bbd0; } /* صف ملك سليمان */
 
-        [contenteditable="true"] { outline: none; cursor: cell; }
-        [contenteditable="true"]:focus { background-color: #fff !important; color: black; box-shadow: inset 0 0 5px #000; }
-        
-        input[type="date"] { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        .print-btn { padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        /* شكل الـ DAY OFF المطلوب (أزرق زاهي دائماً) */
+        .day-off { 
+            background-color: #00b0ff !important; 
+            color: black !important; 
+            font-weight: bold !important;
+            text-align: center;
+        }
+
+        /* شكل الـ Annual Leave */
+        .annual-leave { 
+            background-color: #00c853 !important; 
+            color: white !important; 
+            font-weight: bold; 
+        }
+
+        [contenteditable="true"] { outline: none; cursor: text; }
+        [contenteditable="true"]:focus { background: white !important; color: black; box-shadow: inset 0 0 3px #000; }
+
+        @media print { .controls { display: none; } body { margin: 0; } }
     </style>
 </head>
 <body>
 
 <div class="controls">
-    <div>
-        <strong>Select Start Date (Saturday): </strong>
-        <input type="date" id="startDate" onchange="updateScheduleDates()">
-    </div>
-    <button class="print-btn" onclick="window.print()">Print to PDF</button>
+    <strong>📅 Start Date (Sat):</strong>
+    <input type="date" id="startDate" onchange="updateDates()" value="2025-08-08">
+    <span id="rangeLabel" style="font-weight: bold; color: #31708f;">From 8 Aug To 14 Aug</span>
+    <button onclick="window.print()" style="margin-left:auto; cursor:pointer;">Print / Save PDF</button>
 </div>
 
-<div class="table-container">
-    <table id="mainTable">
-        <thead>
-            <tr class="header-top">
-                <th colspan="17" id="dateRangeDisplay">From 8 Aug To 14 Aug</th>
-            </tr>
-            <tr class="col-header">
-                <th rowspan="2" style="width: 30px;">#</th>
-                <th rowspan="2" style="width: 180px;">name</th>
-                <th rowspan="2" style="width: 150px;">Position</th>
-                <th colspan="2" class="day-header">Saturday <br> <small id="d0">8/Aug</small></th>
-                <th colspan="2" class="day-header">Sunday <br> <small id="d1">9/Aug</small></th>
-                <th colspan="2" class="day-header">Monday <br> <small id="d2">10/Aug</small></th>
-                <th colspan="2" class="day-header">Tuesday <br> <small id="d3">11/Aug</small></th>
-                <th colspan="2" class="day-header">Wednesday <br> <small id="d4">12/Aug</small></th>
-                <th colspan="2" class="day-header">Thursday <br> <small id="d5">13/Aug</small></th>
-                <th colspan="2" class="day-header">Friday <br> <small id="d6">14/Aug</small></th>
-            </tr>
-            <tr class="sub-header">
-                <th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- سيتم إنشاء الصفوف بواسطة JavaScript لتطابق الصورة تماماً -->
-        </tbody>
-    </table>
-</div>
+<table id="scheduleTable">
+    <thead>
+        <tr class="header-main">
+            <th rowspan="2">#</th>
+            <th rowspan="2" style="width:150px">name</th>
+            <th rowspan="2" style="width:130px">Position</th>
+            <th colspan="2" class="header-days">Saturday <div id="d0">8/Aug</div></th>
+            <th colspan="2" class="header-days">Sunday <div id="d1">9/Aug</div></th>
+            <th colspan="2" class="header-days">Monday <div id="d2">10/Aug</div></th>
+            <th colspan="2" class="header-days">Tuesday <div id="d3">11/Aug</div></th>
+            <th colspan="2" class="header-days">Wednesday <div id="d4">12/Aug</div></th>
+            <th colspan="2" class="header-days">Thursday <div id="d5">13/Aug</div></th>
+            <th colspan="2" class="header-days">Friday <div id="d6">14/Aug</div></th>
+        </tr>
+        <tr class="header-sub">
+            <th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody">
+        <!-- سيتم تعبئة البيانات برمجياً لضمان الدقة -->
+    </tbody>
+</table>
 
 <script>
-    const employees = [
-        { id: 1, name: "Yara Ayman", pos: "Agent (Whatsapp)", style: "blue-row", shifts: ["7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { id: 2, name: "Nada Serag", pos: "Agent (CS)", style: "blue-row", shifts: ["7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "OFF"] },
-        { id: 3, name: "Nagham", pos: "Agent (CS)", style: "blue-row", shifts: ["7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { id: 4, name: "Aya Salah", pos: "Agent(Talabat)", style: "blue-row", shifts: ["7:00", "15:00", "7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { id: 5, name: "Shereen Essam", pos: "Agent", style: "grey-row", shifts: ["10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "OFF"] },
-        { id: 6, name: "Samar Mohamed", pos: "Agent", style: "orange-row", shifts: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "ANNUAL", "OFF"] },
-        { id: 7, name: "Reham Wageh", pos: "Agent", style: "orange-row", shifts: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "OFF"] },
-        { id: 8, name: "Salma Mahmoud", pos: "Agent", style: "orange-row", shifts: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "ANNUAL", "OFF"] },
-        { id: 9, name: "Sara Ayman", pos: "Agent", style: "blue-row", shifts: ["OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { id: 10, name: "Malak Soliman", pos: "Agent", style: "pink-row", shifts: ["9:00", "17:00", "9:00", "17:00", "OFF", "9:00", "17:00", "9:00", "17:00", "9:00", "17:00", "8:00", "16:00"] },
-        { id: 11, name: "Ashraf Ayman", pos: "Agent", style: "grey-row", shifts: ["12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "OFF", "12:30", "20:30"] },
-        { id: 12, name: "Samar Sayed", pos: "Agent", style: "blue-row", shifts: ["7:00", "15:00", "7:00", "15:00", "ANNUAL", "ANNUAL", "ANNUAL", "ANNUAL", "OFF"] },
-        { id: 13, name: "Hafsa Rabiaa", pos: "Agent", style: "blue-row", shifts: ["7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { id: 14, name: "Habiba Ahmed", pos: "Agent", style: "orange-row", shifts: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00"] },
-        { id: 15, name: "Karim Mamdouh", pos: "Agent", style: "grey-row", shifts: ["12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "OFF", "12:30", "20:30", "12:30", "20:30"] }
+    // البيانات الفعلية من الصورة
+    const data = [
+        { n: "Yara Ayman", p: "Agent (Whatsapp)", s: "row-blue", d: ["7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
+        { n: "Nada Serag", p: "Agent (CS)", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "OFF"] },
+        { n: "Nagham", p: "Agent (CS)", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
+        { n: "Aya Salah", p: "Agent(Talabat)", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
+        { n: "Shereen Essam", p: "Agent", s: "row-grey", d: ["10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "OFF"] },
+        { n: "Samar Mohamed", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "ANNUAL", "OFF"] },
+        { n: "Reham Wageh", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "OFF"] },
+        { n: "Salma Mahmoud", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "ANNUAL", "OFF"] },
+        { n: "Sara Ayman", p: "Agent", s: "row-blue", d: ["OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
+        { n: "Malak Soliman", p: "Agent", s: "row-pink", d: ["9:00", "17:00", "9:00", "17:00", "OFF", "9:00", "17:00", "9:00", "17:00", "9:00", "17:00", "8:00", "16:00"] },
+        { n: "Ashraf Ayman", p: "Agent", s: "row-grey", d: ["12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "OFF", "12:30", "20:30"] },
+        { n: "Samar Sayed", p: "Agent", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "ANNUAL", "ANNUAL", "ANNUAL", "ANNUAL", "OFF"] },
+        { n: "Hafsa Rabiaa", p: "Agent", s: "row-blue", d: ["7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
+        { n: "Habiba Ahmed", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00"] },
+        { n: "Karim Mamdouh", p: "Agent", s: "row-grey", d: ["12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "OFF", "12:30", "20:30", "12:30", "20:30"] }
     ];
 
-    function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        employees.forEach(emp => {
-            let row = `<tr class="${emp.style}">
-                <td>${emp.id}</td>
-                <td contenteditable="true">${emp.name}</td>
-                <td contenteditable="true">${emp.pos}</td>`;
+    function buildTable() {
+        const body = document.getElementById('tableBody');
+        body.innerHTML = "";
+        data.forEach((item, index) => {
+            let row = document.createElement('tr');
+            row.className = item.s;
+            let html = `<td>${index + 1}</td><td contenteditable="true">${item.n}</td><td contenteditable="true">${item.p}</td>`;
             
-            let shiftIdx = 0;
+            let dIdx = 0;
             for (let i = 0; i < 7; i++) {
-                let val = emp.shifts[shiftIdx];
+                let val = item.d[dIdx];
                 if (val === "OFF") {
-                    row += `<td colspan="2" class="day-off" contenteditable="true">DAY OFF</td>`;
-                    shiftIdx += 1;
+                    html += `<td colspan="2" class="day-off" contenteditable="true">DAY OFF</td>`;
+                    dIdx++;
                 } else if (val === "ANNUAL") {
-                    // معالجة الإجازة السنوية كما في الصف 12
-                    let span = (emp.id === 12) ? 2 : 2; 
-                    row += `<td colspan="${span}" class="annual-leave" contenteditable="true">Annual Leave</td>`;
-                    shiftIdx += 1;
+                    // خاص لسمر سيد (الصف 12) الإجازة تمتد لعدة أيام
+                    if (item.n === "Samar Sayed" && i >= 2 && i <= 5) {
+                        if (i === 2) html += `<td colspan="8" class="annual-leave" contenteditable="true">Annual Leave</td>`;
+                        dIdx++;
+                    } else {
+                        html += `<td colspan="2" class="annual-leave" contenteditable="true">Annual Leave</td>`;
+                        dIdx++;
+                    }
                 } else {
-                    row += `<td contenteditable="true">${emp.shifts[shiftIdx] || ""}</td>
-                            <td contenteditable="true">${emp.shifts[shiftIdx+1] || ""}</td>`;
-                    shiftIdx += 2;
+                    html += `<td contenteditable="true">${item.d[dIdx] || ""}</td><td contenteditable="true">${item.d[dIdx+1] || ""}</td>`;
+                    dIdx += 2;
                 }
             }
-            row += `</tr>`;
-            tbody.innerHTML += row;
+            row.innerHTML = html;
+            body.appendChild(row);
         });
     }
 
-    function updateScheduleDates() {
-        const dateVal = document.getElementById('startDate').value;
-        if (!dateVal) return;
-
-        let start = new Date(dateVal);
-        let options = { day: 'numeric', month: 'short' };
+    function updateDates() {
+        const startVal = document.getElementById('startDate').value;
+        if (!startVal) return;
+        let d = new Date(startVal);
+        let opt = { day: 'numeric', month: 'short' };
         
         for (let i = 0; i < 7; i++) {
-            let current = new Date(start);
-            current.setDate(start.getDate() + i);
-            document.getElementById(`d${i}`).innerText = current.toLocaleDateString('en-GB', options).replace(' ', '/');
+            let curr = new Date(d);
+            curr.setDate(d.getDate() + i);
+            document.getElementById('d' + i).innerText = curr.toLocaleDateString('en-GB', opt).replace(' ', '/');
         }
-
-        let end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        document.getElementById('dateRangeDisplay').innerText = 
-            `From ${start.toLocaleDateString('en-GB', options)} To ${end.toLocaleDateString('en-GB', options)}`;
+        
+        let end = new Date(d);
+        end.setDate(d.getDate() + 6);
+        document.getElementById('rangeLabel').innerText = `From ${d.toLocaleDateString('en-GB', opt)} To ${end.toLocaleDateString('en-GB', opt)}`;
     }
 
-    // تشغيل عند التحميل
-    window.onload = () => {
-        renderTable();
-        // ضبط تاريخ افتراضي (8 Aug كما في الصورة)
-        document.getElementById('startDate').value = "2025-08-08"; 
-        updateScheduleDates();
-    };
+    // ميزة تحويل النص إلى Day Off أزرق تلقائياً عند الكتابة
+    document.addEventListener('input', function(e) {
+        if (e.target.innerText.toUpperCase() === "OFF") {
+            e.target.innerText = "DAY OFF";
+            e.target.classList.add('day-off');
+            // إذا كانت خلية واحدة، نجعلها تأخذ مساحة الخليتين
+            if (e.target.colSpan === 1) {
+                let next = e.target.nextElementSibling;
+                if (next) {
+                    e.target.colSpan = 2;
+                    next.remove();
+                }
+            }
+        }
+    });
+
+    window.onload = () => { buildTable(); updateDates(); };
 </script>
 
 </body>
