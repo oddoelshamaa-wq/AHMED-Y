@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Schedule - Exact Match</title>
+    <title>Work Schedule - Fixed Colors</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 10px; background-color: #e9f0f5; }
         .controls { background: #d9edf7; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; align-items: center; gap: 15px; border: 1px solid #bce8f1; }
@@ -11,30 +11,28 @@
         table { border-collapse: collapse; width: 100%; font-size: 13px; background: white; }
         th, td { border: 1px solid #777; text-align: center; padding: 4px; height: 28px; }
 
-        /* ألوان الهيدر العلوي */
         .header-main { background-color: #dcedc8; font-weight: bold; }
         .header-days { background-color: #fff9c4; }
         .header-sub { background-color: #e8f5e9; }
 
-        /* ألوان الصفوف حسب الصورة بالضبط */
-        .row-blue { background-color: #b3e5fc; } /* صفوف يارا، ندى، نغم... */
-        .row-grey { background-color: #cfd8dc; } /* صفوف شيرين، أشرف، كريم */
-        .row-orange { background-color: #ffe0b2; } /* صفوف سمر، ريهام، سلمى */
-        .row-pink { background-color: #f8bbd0; } /* صف ملك سليمان */
+        /* ألوان الصفوف الأساسية */
+        .row-blue { background-color: #b3e5fc; }
+        .row-grey { background-color: #cfd8dc; }
+        .row-orange { background-color: #ffe0b2; }
+        .row-pink { background-color: #f8bbd0; }
 
-        /* شكل الـ DAY OFF المطلوب (أزرق زاهي دائماً) */
+        /* شكل الـ Annual Leave (الأخضر المطلوب) */
+        .annual-leave { 
+            background-color: #00c853 !important; /* لون أخضر زاهي */
+            color: white !important; 
+            font-weight: bold !important;
+            text-transform: capitalize;
+        }
+
         .day-off { 
             background-color: #00b0ff !important; 
             color: black !important; 
             font-weight: bold !important;
-            text-align: center;
-        }
-
-        /* شكل الـ Annual Leave */
-        .annual-leave { 
-            background-color: #00c853 !important; 
-            color: white !important; 
-            font-weight: bold; 
         }
 
         [contenteditable="true"] { outline: none; cursor: text; }
@@ -46,7 +44,7 @@
 <body>
 
 <div class="controls">
-    <strong>📅 Start Date (Sat):</strong>
+    <strong>📅 Start Date:</strong>
     <input type="date" id="startDate" onchange="updateDates()" value="2025-08-08">
     <span id="rangeLabel" style="font-weight: bold; color: #31708f;">From 8 Aug To 14 Aug</span>
     <button onclick="window.print()" style="margin-left:auto; cursor:pointer;">Print / Save PDF</button>
@@ -56,7 +54,7 @@
     <thead>
         <tr class="header-main">
             <th rowspan="2">#</th>
-            <th rowspan="2" style="width:150px">name</th>
+            <th rowspan="2" style="width:150px">Name</th>
             <th rowspan="2" style="width:130px">Position</th>
             <th colspan="2" class="header-days">Saturday <div id="d0">8/Aug</div></th>
             <th colspan="2" class="header-days">Sunday <div id="d1">9/Aug</div></th>
@@ -70,29 +68,26 @@
             <th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th><th>From</th><th>To</th>
         </tr>
     </thead>
-    <tbody id="tableBody">
-        <!-- سيتم تعبئة البيانات برمجياً لضمان الدقة -->
-    </tbody>
+    <tbody id="tableBody"></tbody>
 </table>
 
 <script>
-    // البيانات الفعلية من الصورة
     const data = [
-        { n: "Yara Ayman", p: "Agent (Whatsapp)", s: "row-blue", d: ["7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { n: "Nada Serag", p: "Agent (CS)", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "OFF"] },
-        { n: "Nagham", p: "Agent (CS)", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { n: "Aya Salah", p: "Agent(Talabat)", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { n: "Shereen Essam", p: "Agent", s: "row-grey", d: ["10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "10:00", "18:00", "OFF"] },
-        { n: "Samar Mohamed", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "ANNUAL", "OFF"] },
-        { n: "Reham Wageh", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "OFF"] },
-        { n: "Salma Mahmoud", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "ANNUAL", "OFF"] },
-        { n: "Sara Ayman", p: "Agent", s: "row-blue", d: ["OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { n: "Malak Soliman", p: "Agent", s: "row-pink", d: ["9:00", "17:00", "9:00", "17:00", "OFF", "9:00", "17:00", "9:00", "17:00", "9:00", "17:00", "8:00", "16:00"] },
-        { n: "Ashraf Ayman", p: "Agent", s: "row-grey", d: ["12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "OFF", "12:30", "20:30"] },
-        { n: "Samar Sayed", p: "Agent", s: "row-blue", d: ["7:00", "15:00", "7:00", "15:00", "ANNUAL", "ANNUAL", "ANNUAL", "ANNUAL", "OFF"] },
-        { n: "Hafsa Rabiaa", p: "Agent", s: "row-blue", d: ["7:00", "15:00", "OFF", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00", "7:00", "15:00"] },
-        { n: "Habiba Ahmed", p: "Agent", s: "row-orange", d: ["8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00", "8:00", "16:00"] },
-        { n: "Karim Mamdouh", p: "Agent", s: "row-grey", d: ["12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "12:30", "20:30", "OFF", "12:30", "20:30", "12:30", "20:30"] }
+        { n: "Yara Ayman", p: "Agent (Whatsapp)", s: "row-blue", d: [""] },
+        { n: "Nada Serag", p: "Agent (CS)", s: "row-blue", d: [""] },
+        { n: "Nagham", p: "Agent (CS)", s: "row-blue", d: [""] },
+        { n: "Aya Salah", p: "Agent(Talabat)", s: "row-blue", d: [""] },
+        { n: "Shereen Essam", p: "Agent", s: "row-grey", d: [""] },
+        { n: "Samar Mohamed", p: "Agent", s: "row-orange", d: [""] },
+        { n: "Reham Wageh", p: "Agent", s: "row-orange", d: [""] },
+        { n: "Salma Mahmoud", p: "Agent", s: "row-orange", d: [""] },
+        { n: "Sara Ayman", p: "Agent", s: "row-blue", d: [""] },
+        { n: "Malak Soliman", p: "Agent", s: "row-pink", d: [""] },
+        { n: "Ashraf Ayman", p: "Agent", s: "row-grey", d: [""] },
+        { n: "Samar Sayed", p: "Agent", s: "row-blue", d: [""] },
+        { n: "Hafsa Rabiaa", p: "Agent", s: "row-blue", d: [""] },
+        { n: "Habiba Ahmed", p: "Agent", s: "row-orange", d: [""] },
+        { n: "Karim Mamdouh", p: "Agent", s: "row-grey", d: [""] }
     ];
 
     function buildTable() {
@@ -110,10 +105,9 @@
                     html += `<td colspan="2" class="day-off" contenteditable="true">DAY OFF</td>`;
                     dIdx++;
                 } else if (val === "ANNUAL") {
-                    // خاص لسمر سيد (الصف 12) الإجازة تمتد لعدة أيام
-                    if (item.n === "Samar Sayed" && i >= 2 && i <= 5) {
-                        if (i === 2) html += `<td colspan="8" class="annual-leave" contenteditable="true">Annual Leave</td>`;
-                        dIdx++;
+                    if (item.n === "Samar Sayed" && i === 2) { 
+                        html += `<td colspan="8" class="annual-leave" contenteditable="true">Annual Leave</td>`;
+                        dIdx += 4; i += 3;
                     } else {
                         html += `<td colspan="2" class="annual-leave" contenteditable="true">Annual Leave</td>`;
                         dIdx++;
@@ -128,41 +122,54 @@
         });
     }
 
+    // هذه الوظيفة تجعل أي خلية تكتب فيها كلمة ANNUAL تتحول فوراً للون الأخضر
+    document.addEventListener('input', function(e) {
+        if (!e.target.hasAttribute('contenteditable')) return;
+        let text = e.target.innerText.toUpperCase();
+        
+        if (text === "ANNUAL" || text === "ANNUAL LEAVE") {
+            e.target.innerText = "Annual Leave";
+            e.target.className = "annual-leave";
+            // دمج الخلايا تلقائياً إذا كانت خلية واحدة
+            if (e.target.colSpan === 1) {
+                let next = e.target.nextElementSibling;
+                if (next && next.tagName === "TD") {
+                    e.target.colSpan = 2;
+                    next.remove();
+                }
+            }
+        } else if (text === "OFF" || text === "DAY OFF") {
+            e.target.innerText = "DAY OFF";
+            e.target.className = "day-off";
+            if (e.target.colSpan === 1) {
+                let next = e.target.nextElementSibling;
+                if (next && next.tagName === "TD") {
+                    e.target.colSpan = 2;
+                    next.remove();
+                }
+            }
+        } else {
+            // إذا مسح النص يرجع اللون العادي
+            if (e.target.className === "annual-leave" || e.target.className === "day-off") {
+                e.target.className = "";
+            }
+        }
+    });
+
     function updateDates() {
         const startVal = document.getElementById('startDate').value;
         if (!startVal) return;
         let d = new Date(startVal);
         let opt = { day: 'numeric', month: 'short' };
-        
         for (let i = 0; i < 7; i++) {
             let curr = new Date(d);
             curr.setDate(d.getDate() + i);
             document.getElementById('d' + i).innerText = curr.toLocaleDateString('en-GB', opt).replace(' ', '/');
         }
-        
-        let end = new Date(d);
-        end.setDate(d.getDate() + 6);
-        document.getElementById('rangeLabel').innerText = `From ${d.toLocaleDateString('en-GB', opt)} To ${end.toLocaleDateString('en-GB', opt)}`;
     }
-
-    // ميزة تحويل النص إلى Day Off أزرق تلقائياً عند الكتابة
-    document.addEventListener('input', function(e) {
-        if (e.target.innerText.toUpperCase() === "OFF") {
-            e.target.innerText = "DAY OFF";
-            e.target.classList.add('day-off');
-            // إذا كانت خلية واحدة، نجعلها تأخذ مساحة الخليتين
-            if (e.target.colSpan === 1) {
-                let next = e.target.nextElementSibling;
-                if (next) {
-                    e.target.colSpan = 2;
-                    next.remove();
-                }
-            }
-        }
-    });
 
     window.onload = () => { buildTable(); updateDates(); };
 </script>
 
-</body>
+</body> 
 </html>
