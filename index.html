@@ -39,10 +39,34 @@
         .synced { color: #2e7d32; }
 
         @media print { .controls, .btn-delete, .col-action { display: none !important; } table { width: 100%; } }
+        #leavesPage table th, #leavesPage table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+#leavesPage table tr:nth-child(even) { background-color: #f9f9f9; }
+/* تصميم النافذة المنبثقة (Modal) */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center;
+}
+.modal-content {
+    background: white; padding: 25px; border-radius: 15px; width: 350px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: right; direction: rtl;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-content h3 { margin-top: 0; color: #37474f; border-bottom: 2px solid #2196F3; padding-bottom: 10px; }
+.input-group { margin: 15px 0; }
+.input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+.input-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+.btn-save { background: #2196F3; color: white; border: none; flex: 2; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn-cancel { background: #eee; color: #333; border: none; flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; }
+.btn-save:hover { background: #1976D2; }
     </style>
 </head>
 <body>
-
+<div style="margin-bottom: 10px;">
+    <button onclick="showPage('schedule')" id="btnSched" style="padding: 10px 20px; cursor: pointer; background: #2196F3; color: white; border: none; border-radius: 5px;">جدول العمل</button>
+    <button onclick="showPage('leaves')" id="btnLeaves" style="padding: 10px 20px; cursor: pointer; background: #cfd8dc; border: none; border-radius: 5px;">عداد السنوي</button>
+</div>  
 <div class="controls">
     <strong>📅 Start Date:</strong>
     <input type="date" id="startDate" onchange="updateDatesAndSave()" value="2025-08-08">
@@ -75,6 +99,41 @@
     </thead>
     <tbody id="tableBody"></tbody>
 </table>
+<div id="leavesPage" style="display: none; background: white; padding: 20px; border-radius: 8px; border: 1px solid #ccc;">
+    <h2 style="text-align: center;">إحصائيات الإجازات السنوية</h2>
+    <table style="width: 70%; margin: 0 auto; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #37474f; color: white;">
+                <th>اسم الموظف</th>
+      <th>المستخدم</th>
+        <th>المتبقي</th>
+        <th>تعديل</th>
+            
+            </tr>
+        </thead>
+        <tbody id="leavesTableBody">
+            <!-- البيانات ستظهر هنا برمجياً -->
+        </tbody>
+    </table>
+</div>
+<!-- نافذة التعديل الجديدة -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="modalTitle">تعديل بيانات الموظف</h3>
+        <div class="input-group">
+            <label>الرصيد السنوي الكلي:</label>
+            <input type="number" id="inputTotal" placeholder="مثلاً: 21">
+        </div>
+        <div class="input-group">
+            <label>أيام مستخدمة سابقاً:</label>
+            <input type="number" id="inputManual" placeholder="خارج هذا الجدول">
+        </div>
+        <div class="modal-btns">
+            <button class="btn-save" onclick="saveModalData()">حفظ التغييرات ✅</button>
+            <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const firebaseConfig = {
@@ -210,6 +269,166 @@
             }
         });
     };
+    // دالة التبديل بين الصفحات
+function showPage(page) {
+    if (page === 'schedule') {
+        document.getElementById('scheduleTable').style.display = 'table';
+        document.getElementById('leavesPage').style.display = 'none';
+        document.getElementById('btnSched').style.background = '#2196F3';
+        document.getElementById('btnSched').style.color = 'white';
+        document.getElementById('btnLeaves').style.background = '#cfd8dc';
+        document.getElementById('btnLeaves').style.color = 'black';
+    } else {
+        document.getElementById('scheduleTable').style.display = 'none';
+        document.getElementById('leavesPage').style.display = 'block';
+        document.getElementById('btnLeaves').style.background = '#2196F3';
+        document.getElementById('btnLeaves').style.color = 'white';
+        document.getElementById('btnSched').style.background = '#cfd8dc';
+        document.getElementById('btnSched').style.color = 'black';
+        
+        // تشغيل التحديث عند فتح الصفحة
+        updateLeavesStats();
+    }
+}
+
+// دالة حساب الإجازات بناءً على ما هو موجود في الجدول
+function updateLeavesStats() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    const leavesBody = document.getElementById('leavesTableBody');
+    leavesBody.innerHTML = ''; // مسح البيانات القديمة
+
+    rows.forEach(row => {
+        // جلب الاسم من الخلية الثانية في الصف
+        let name = row.cells[1].innerText.trim();
+        if (name === "") return; // تخطي الصفوف الفارغة
+
+        // عد الخلايا التي تحتوي على كلاس 'annual-leave' في هذا الصف فقط
+        let usedThisWeek = row.querySelectorAll('.annual-leave').length;
+        
+        // لنفرض أن الرصيد الكلي لكل موظف 21 (يمكنك تعديل هذا الرقم)
+        let totalBalance = 21; 
+        let remaining = totalBalance - usedThisWeek;
+
+        // إضافة صف في جدول الإحصائيات
+        leavesBody.innerHTML += `
+            <tr>
+                <td style="font-weight: bold;">${name}</td>
+                <td style="color: #d32f2f; font-weight: bold;">${usedThisWeek} أيام</td>
+                <td style="color: #2e7d32; font-weight: bold;">${remaining} يوم</td>
+            </tr>
+        `;
+    });
+}
+// --- إعدادات إضافية ---
+const ADMIN_PASSWORD = "1234"; // يمكنك تغيير كلمة المرور من هنا
+let employeeBalances = {}; // لتخزين أرصدة الموظفين القادمة من السحاب
+
+function saveToCloud() {
+    document.getElementById('syncIndicator').innerText = "Saving... ⏳";
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        docRef.set({
+            content: document.getElementById('tableBody').innerHTML,
+            startDate: document.getElementById('startDate').value,
+            balances: employeeBalances // إضافة هذا السطر لحفظ الأرصدة
+        }).then(() => {
+            document.getElementById('syncIndicator').innerText = "All Saved ✅";
+        });
+    }, 1000); 
+}
+
+window.onload = () => {
+    docRef.onSnapshot((doc) => {
+        if (doc.exists && document.activeElement.tagName !== 'TD') {
+            const data = doc.data();
+            document.getElementById('tableBody').innerHTML = data.content;
+            document.getElementById('startDate').value = data.startDate;
+            employeeBalances = data.balances || {}; // تحميل الأرصدة المخزنة
+            updateDates();
+        }
+    });
+};
+
+// دالة حساب الإجازات وتعديل الرصيد
+function updateLeavesStats() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    const leavesBody = document.getElementById('leavesTableBody');
+    leavesBody.innerHTML = ''; 
+
+    rows.forEach(row => {
+        let name = row.cells[1].innerText.trim();
+        if (name === "" || name === "Name") return; 
+
+        let usedThisWeek = row.querySelectorAll('.annual-leave').length;
+        
+        // جلب بيانات الموظف (الرصيد الكلي والمستخدم سابقاً)
+        let data = employeeBalances[name] || { total: 21, manualUsed: 0 };
+        
+        // حساب الإجمالي
+        let totalUsed = usedThisWeek + (parseInt(data.manualUsed) || 0);
+        let remaining = (parseInt(data.total) || 21) - totalUsed;
+
+        leavesBody.innerHTML += `
+            <tr>
+                <td style="font-weight: bold;">${name}</td>
+                <td style="color: #d32f2f; font-weight: bold;">
+                    ${totalUsed} أيام 
+                    <small style="color:gray; display:block; font-size:9px;">(${usedThisWeek} حالي + ${data.manualUsed || 0} سابق)</small>
+                </td>
+                <td style="color: #2e7d32; font-weight: bold;">${remaining} يوم</td>
+                <td><button onclick="editBalancePrompt('${name}')" style="cursor:pointer; padding:2px 5px;">تعديل ⚙️</button></td>
+            </tr>
+        `;
+    });
+}
+
+// دالة تعديل الرصيد بكلمة مرور
+let currentEditingEmployee = "";
+
+// تفتح النافذة بعد التأكد من الباسورد
+function editBalancePrompt(employeeName) {
+    let pass = prompt("أدخل كلمة المرور للدخول لوضع التعديل:");
+    
+    if (pass === ADMIN_PASSWORD) {
+        currentEditingEmployee = employeeName;
+        let current = employeeBalances[employeeName] || { total: 21, manualUsed: 0 };
+        
+        // تعبئة البيانات الحالية في النافذة
+        document.getElementById('modalTitle').innerText = "تعديل: " + employeeName;
+        document.getElementById('inputTotal').value = current.total;
+        document.getElementById('inputManual').value = current.manualUsed;
+        
+        // إظهار النافذة
+        document.getElementById('editModal').style.display = 'flex';
+    } else if (pass !== null) {
+        alert("كلمة المرور خاطئة!");
+    }
+}
+
+function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function saveModalData() {
+    let total = document.getElementById('inputTotal').value;
+    let manual = document.getElementById('inputManual').value;
+
+    if (total === "" || manual === "") {
+        alert("يرجى ملء جميع الخانات");
+        return;
+    }
+
+    // حفظ البيانات
+    employeeBalances[currentEditingEmployee] = {
+        total: parseInt(total),
+        manualUsed: parseInt(manual)
+    };
+
+    saveToCloud(); // حفظ في Firebase
+    closeModal();
+    setTimeout(updateLeavesStats, 500); // تحديث الجدول
+    alert("تم تحديث بيانات " + currentEditingEmployee + " بنجاح ✨");
+}
 </script>
 
 </body>
