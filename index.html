@@ -6,6 +6,8 @@
     <title>Cloud Work Schedule</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
 
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 10px; background-color: #e9f0f5; }
@@ -60,6 +62,7 @@
 .btn-save { background: #2196F3; color: white; border: none; flex: 2; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 .btn-cancel { background: #eee; color: #333; border: none; flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; }
 .btn-save:hover { background: #1976D2; }
+
     </style>
 </head>
 <body>
@@ -75,6 +78,11 @@
     
     <button onclick="addNewRow()" class="btn-add">+ Add Employee</button>
     <button onclick="window.print()" style="margin-left:auto; cursor:pointer; padding: 5px 15px;">Print</button>
+    <!-- الأزرار الجديدة -->
+<button onclick="shareAsImage()" style="background: #128C7E; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+    إرسال الجدول للواتساب (صورة) 📱
+</button>
+<button onclick="shareAsImage()" style="background: #128C7E; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">صورة للواتساب 🖼️</button>
     <button onclick="resetTable()" class="btn-clear">Reset All</button>
 </div>
 
@@ -428,6 +436,94 @@ function saveModalData() {
     closeModal();
     setTimeout(updateLeavesStats, 500); // تحديث الجدول
     alert("تم تحديث بيانات " + currentEditingEmployee + " بنجاح ✨");
+}
+// 1. وظيفة إرسال الجدول كنص منسق وجميل
+function shareAsText() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    const startDate = document.getElementById('startDate').value;
+    let message = `📅 *جدول العمل المحدث* \n🗓️ *بداية من:* ${startDate}\n\n`;
+
+    rows.forEach(row => {
+        let name = row.cells[1].innerText.trim();
+        let position = row.cells[2].innerText.trim();
+        if (name === "" || name === "Name") return;
+
+        message += `👤 *${name}* (${position})\n`;
+        
+        const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        for (let i = 0; i < 7; i++) {
+            let cell = row.cells[3 + (i * 2)]; // خلية From
+            let toCell = row.cells[4 + (i * 2)]; // خلية To
+            
+            if (cell.classList.contains('day-off')) {
+                message += `🔹 ${days[i]}: 🌴 راحة\n`;
+            } else if (cell.classList.contains('annual-leave')) {
+                message += `🔹 ${days[i]}: ✈️ سنوي\n`;
+            } else {
+                let fromTime = cell.innerText.trim();
+                let toTime = toCell.innerText.trim();
+                if (fromTime) message += `🔹 ${days[i]}: ${fromTime} ⬅️ ${toTime}\n`;
+            }
+        }
+        message += `--------------------------\n`;
+    });
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+}
+
+// 2. وظيفة تحويل الجدول لصورة وتحميلها
+async function shareAsImage() {
+    const table = document.getElementById('scheduleTable');
+    const syncIndicator = document.getElementById('syncIndicator');
+    
+    // 1. إخفاء عمود الحذف (الـ Action) تماماً من الصورة
+    const actionElements = document.querySelectorAll('.col-action');
+    actionElements.forEach(el => el.style.display = 'none');
+    
+    syncIndicator.innerText = "جاري تصوير الجدول... 📸";
+
+    try {
+        // 2. التقاط صورة الجدول بدقة عالية
+        const canvas = await html2canvas(table, {
+            backgroundColor: "#ffffff",
+            scale: 2,
+            useCORS: true
+        });
+        
+        canvas.toBlob(async (blob) => {
+            // 3. نسخ الصورة إلى ذاكرة الجهاز (Clipboard) تلقائياً
+            try {
+                const item = new ClipboardItem({ "image/png": blob });
+                await navigator.clipboard.write([item]);
+                
+                const warningText = "⚠️ تحذير: يرجى الالتزام بالمواعيد المحددة أعلاه. أي تغيير يجب أن يتم بالتنسيق مع الإدارة.";
+                
+                // 4. فتح الواتساب ووضع نص التحذير
+                const waUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(warningText)}`;
+                window.open(waUrl, '_blank');
+
+                // رسالة تنبيهية كبيرة للمستخدم لتوضيح الخطوة الأخيرة
+                alert("تم تصوير الجدول ونسخه بنجاح! ✅\n\nالآن في صفحة الواتساب:\n1- اضغط داخل مربع الكتابة.\n2- اضغط (Ctrl + V) أو 'لصق' لإظهار صورة الجدول.\n3- اضغط إرسال.");
+
+            } catch (err) {
+                // إذا رفض المتصفح النسخ التلقائي (في بعض الحالات)، سنقوم بتحميل الصورة
+                const link = document.createElement('a');
+                link.download = "Schedule.png";
+                link.href = canvas.toDataURL();
+                link.click();
+                alert("تم تحميل صورة الجدول على جهازك. يمكنك الآن سحبها للواتساب وإرسالها.");
+            }
+        }, 'image/png');
+
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء التصوير.");
+    } finally {
+        // 5. إعادة إظهار عمود العمليات في الموقع بعد الانتهاء
+        actionElements.forEach(el => el.style.display = '');
+        syncIndicator.innerText = "All Saved ✅";
+    }
 }
 </script>
 
