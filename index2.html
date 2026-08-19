@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منيو نجف 2026 - Nagaf Menu</title>
+    <style>
+        :root {
+            --primary-color: #d35400;
+            --secondary-color: #2c3e50;
+            --bg-color: #f4f4f4;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            text-align: center;
+        }
+
+        .menu-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            background: var(--secondary-color);
+            color: white;
+            padding: 12px 15px;
+            margin: 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-info {
+            flex-grow: 1;
+            padding-left: 10px;
+        }
+
+        .item-name {
+            font-weight: bold;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .item-desc {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .item-price {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .price-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        .price-tag {
+            font-size: 0.7rem;
+            background: #eee;
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+
+        .new-badge {
+            background: #e74c3c;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.8rem;
+        }
+        .filter-container {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.filter-box {
+    width: 100%;
+    padding: 12px;
+    border-radius: 25px;
+    border: 2px solid var(--secondary-color);
+    background-color: white;
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    appearance: none; /* لإزالة شكل السهم الافتراضي */
+    text-align: center;
+}
+.filter-container {
+    display: flex;
+    flex-wrap: wrap; /* لجعل الأزرار تنزل تحت بعضها في الموبايل */
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    padding: 8px 15px;
+    border: 2px solid var(--secondary-color);
+    background-color: white;
+    color: var(--secondary-color);
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+    transition: 0.3s;
+}
+
+.filter-btn.active {
+    background-color: var(--secondary-color);
+    color: white;
+}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 style="margin:0;">Nagaf Price List 2026</h1>
+        <p style="margin:5px 0 0 0;">مطعم نجف - قائمة الأسعار الكاملة</p>
+    </header>
+
+    <input type="text" id="searchInput" class="search-box" placeholder="ابحث عن أكلة أو صنف..." onkeyup="searchMenu()">
+<div class="filter-container" id="filterButtons">
+    <button class="filter-btn active" onclick="toggleFilter(this, 'all')">عرض الكل</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'وجبات فطار نجف')">وجبات فطار</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'الركن السوري ( غربي )')">الركن السوري</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'جريل وبرجر')">جريل وبرجر</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'قسم الفول')">فول</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'قسم الطعمية')">طعمية</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'قسم البطاطس')">بطاطس</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'مشويات ( على الفحم )')">مشويات</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'حواوشي على الفحم')">حواوشي</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'الطواجن')">طواجن</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'المشروبات')">مشروبات</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'إضافات')">إضافات</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'المعلبات والسايب')">المعلبات</button>
+    <button class="filter-btn" onclick="toggleFilter(this, 'الركن السوري الشرقي')">الركن السوري الشرقي</button>
+<button class="filter-btn" onclick="toggleFilter(this, 'الأومليت')">الأومليت</button>
+<button class="filter-btn" onclick="toggleFilter(this, 'متنوع')">متنوع</button>
+</div>
+    <!-- وجبات فطار نجف -->
+    <div class="menu-section">
+        <h2 class="section-title">وجبات فطار نجف</h2>
+        <div class="item-list">
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">فطار الريان</span><span class="item-desc">فول + 2 قرص طعمية + بطاطس + بيض مسلوق + 3 عيش شامي</span></div>
+                <span class="item-price">54 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">فطار الهنا</span><span class="item-desc">فول + 2 قرص طعمية + بطاطس + جبنة بالطماطم + 3 عيش شامي</span></div>
+                <span class="item-price">58 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">فطار البيت</span><span class="item-desc">فول + 2 قرص طعمية + بطاطس + بابا غنوج + 3 عيش شامي</span></div>
+                <span class="item-price">60 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">فطار المزاج</span><span class="item-desc">فول اسكندراني + 2 قرص طعمية + بطاطس + مخلل + 3 عيش شامي</span></div>
+                <span class="item-price">52 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">فطار السعادة</span><span class="item-desc">فول + طعمية محشية + بطاطس + مخلل + 3 عيش شامي</span></div>
+                <span class="item-price">50 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">فطار الملوك</span><span class="item-desc">فول + طعمية كيري + بطاطس + مخلل + 3 عيش شامي</span></div>
+                <span class="item-price">60 ج</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- الركن السوري ( غربي ) -->
+    <div class="menu-section">
+        <h2 class="section-title">الركن السوري ( غربي )</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">ساندوتش شاورما لحمة</span><span class="item-price">55 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش شاورما فراخ</span><span class="item-price">55 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش تشيكن كرانشي</span><span class="item-price">55 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش شيش طاووق الفحم</span><span class="item-price">55 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش كفتة كندوز بلدي مشوية فحم</span><span class="item-price">55 ج</span></div>
+        </div>
+    </div>
+
+    <!-- جريل وبرجر -->
+    <div class="menu-section">
+        <h2 class="section-title">جريل وبرجر</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">ساندوتش شاورما لحمة - فراخ كايزر</span><span class="item-price">55 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش شاورما لحمة - فراخ فرنساوي</span><span class="item-price">115 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش كبدة اسكندراني / سجق عيش فرنساوي</span><span class="item-price">50 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش تشيكن كرانشي فرنساوي</span><span class="item-price">105 ج</span></div>
+            <div class="menu-item"><span class="item-name">ساندوتش برجر تكساس فراخ</span><span class="item-price">105 ج</span></div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">ساندوتش برجر تكساس لحمة مشوي سنجل</span><span class="item-desc">170 جرام</span></div>
+                <span class="item-price">105 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">ساندوتش برجر تكساس لحمة مشوي دبل</span><span class="item-desc">340 جرام</span></div>
+                <span class="item-price">155 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name"> صدور ستربس <span class="new-badge">جديد</span></span><span class="item-desc">أرز بسمتي + تومية صوص كوكتيل + 2 عيش</span></div>
+                <span class="item-price">130 ج</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم الفول -->
+    <div class="menu-section">
+        <h2 class="section-title">قسم الفول</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">فول نجف ( سلطة و طحينة )</span><span class="item-price">13 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول اسكندراني أو بالصلصة</span><span class="item-price">15 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول زيت ذرة أو حار</span><span class="item-price">16 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بالبيض المسلوق</span><span class="item-price">23 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بالبيض المقلي</span><span class="item-price">25 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بالطماطم المخللة</span><span class="item-price">17 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بالسجق</span><span class="item-price">25 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بزيت الزيتون</span><span class="item-price">20 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول على بطاطس</span><span class="item-price">20 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول على بابا غنوج أو بالباذنجان مقلي</span><span class="item-price">22 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بالبسطرمة</span><span class="item-price">27 ج</span></div>
+            <div class="menu-item"><span class="item-name">فول بالليمون المعصفر</span><span class="item-price">16 ج</span></div>
+        </div>
+    </div>
+
+    <!-- قسم الطعمية -->
+    <div class="menu-section">
+        <h2 class="section-title">قسم الطعمية</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">طعمية نجف ( سلطة و طحينة )</span><span class="item-price">13 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية محشية</span><span class="item-price">15 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية بالبيض المسلوق</span><span class="item-price">23 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية بالبيض المقلي</span><span class="item-price">25 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية على بابا غنوج أو مسقعة أو باذنجان</span><span class="item-price">22 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية على صوابع أو شيبسي</span><span class="item-price">20 ج</span></div>
+            <div class="menu-item"><span class="item-name">عجة بلدي</span><span class="item-price">25 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية بالطماطم المخللة</span><span class="item-price">17 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية محشية بالطماطم المخللة</span><span class="item-price">18 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية بالجبنة الرومي</span><span class="item-price">26 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية بالبسطرمة</span><span class="item-price">27 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية جبنة كيري - عيش شامي</span><span class="item-price">26 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية جبنة كيري - عيش كايزر</span><span class="item-price">32 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية جبنة كيري بسطرمة</span><span class="item-price">32 ج</span></div>
+        </div>
+    </div>
+
+    <!-- قسم البطاطس -->
+    <div class="menu-section">
+        <h2 class="section-title">قسم البطاطس</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">بطاطس شيبسي - صوابع - مهروسة</span><span class="item-price">18 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بالكاتشب</span><span class="item-price">21 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بالكاتشب و المايونيز</span><span class="item-price">23 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس بالمايونيز أو الثومية</span><span class="item-price">23 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بالجبنة الرومي</span><span class="item-price">28 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع صوص شيدر</span><span class="item-price">28 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بخلطة الجبنة الشيدر</span><span class="item-price">31 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع ( عيش فرنساوي )</span><span class="item-price">30 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس مهروسة بالبيض المسلوق</span><span class="item-price">28 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس مهروسة بالبيض المقلي</span><span class="item-price">30 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع على بابا غنوج أو باذنجان</span><span class="item-price">27 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بالجبنة والطماطم</span><span class="item-price">25 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بالسلطة الروسي</span><span class="item-price">20 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس صوابع بالطماطم المخللة</span><span class="item-price">22 ج</span></div>
+            <div class="menu-item"><span class="item-name">صوابع كريسبي <span class="new-badge">NEW</span></span><span class="item-price">22 ج</span></div>
+        </div>
+    </div>
+
+    <!-- مشويات ( على الفحم ) -->
+    <div class="menu-section">
+        <h2 class="section-title">مشويات ( على الفحم )</h2>
+        <div class="item-list">
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة التوفير</span><span class="item-desc">ربع فرخة + أرز بسمتي + سلطات + 2 عيش</span></div>
+                <div class="price-grid"><span class="price-tag">ورك: 110ج</span><span class="price-tag">صدر: 135ج</span></div>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة الريان</span><span class="item-desc">نص فرخة + أرز بسمتي + سلطات + 4 عيش</span></div>
+                <span class="item-price">210 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة فراخ مخلية <span class="new-badge">جديد</span></span><span class="item-desc">نص فرخة مخلية + أرز بسمتي + سلطات + 4 عيش</span></div>
+                <span class="item-price">250 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة نجفاوي</span><span class="item-desc">ربع فرخة + سيخ كفتة بلدي + أرز + سلطة + 2 عيش</span></div>
+                <div class="price-grid"><span class="price-tag">ورك: 180ج</span><span class="price-tag">صدر: 205ج</span></div>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة شيش طاووق</span><span class="item-desc">شيش + أرز + سلطة + تومية + 2 عيش</span></div>
+                <span class="item-price">130 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة الطيبين</span><span class="item-desc">ربع كيلو كفتة كندوز بلدي + أرز بسمتي + سلطة + طحينة + عيش</span></div>
+                <span class="item-price">170 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة الكرم</span><span class="item-desc">ربع كيلو كفتة كندوز بلدي + سلطة + طحينة + عيش</span></div>
+                <span class="item-price">150 ج</span>
+            </div>
+            <div class="menu-item">
+                <div class="item-info"><span class="item-name">وجبة اللمة</span><span class="item-desc">نص كيلو كفتة كندوز بلدي + سلطة + طحينة + عيش</span></div>
+                <span class="item-price">300 ج</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- حواوشي على الفحم -->
+    <div class="menu-section">
+        <h2 class="section-title">حواوشي على الفحم</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">حواوشي عيش بلدي الفحم</span><span class="item-price">60 ج</span></div>
+            <div class="menu-item"><span class="item-name">حواوشي شيدر أو رومي</span><span class="item-price">70 ج</span></div>
+            <div class="menu-item"><span class="item-name">حواوشي سجق</span><span class="item-price">72 ج</span></div>
+            <div class="menu-item"><span class="item-name">حواوشي ميكس جبن</span><span class="item-price">75 ج</span></div>
+        </div>
+    </div>
+
+    <!-- الطواجن -->
+    <div class="menu-section">
+        <h2 class="section-title">الطواجن</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">طاجن مكرونة بشاميل باللحمة المفرومة</span><span class="item-price">50 ج</span></div>
+            <div class="menu-item"><span class="item-name">طبق أرز بسمتي بالشاورما اللحمة أو الفراخ</span><span class="item-price">110 ج</span></div>
+            <div class="menu-item"><span class="item-name">طبق أرز بسمتي بالكبدة أو السجق</span><span class="item-price">75 ج</span></div>
+            <div class="menu-item"><span class="item-name">طبق أرز بسمتي</span><span class="item-price">30 ج</span></div>
+        </div>
+    </div>
+
+    <!-- المشروبات -->
+    <div class="menu-section">
+        <h2 class="section-title">المشروبات</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">مشروب غازي</span><span class="item-price">17 ج</span></div>
+            <div class="menu-item"><span class="item-name">بيبسي كولا</span><span class="item-price">10 ج</span></div>
+            <div class="menu-item"><span class="item-name">مياه معدنية صغيرة</span><span class="item-price">8 ج</span></div>
+        </div>
+    </div>
+
+    <!-- إضافات -->
+    <div class="menu-section">
+        <h2 class="section-title">إضافات</h2>
+        <div class="item-list">
+            <div class="menu-item"><span class="item-name">اسكندراني</span><span class="item-price">2 ج</span></div>
+            <div class="menu-item"><span class="item-name">زيوت حار أو ذرة</span><span class="item-price">3 ج</span></div>
+            <div class="menu-item"><span class="item-name">بيض مسلوق</span><span class="item-price">10 ج</span></div>
+            <div class="menu-item"><span class="item-name">بيض مقلي</span><span class="item-price">12 ج</span></div>
+            <div class="menu-item"><span class="item-name">سجق</span><span class="item-price">12 ج</span></div>
+            <div class="menu-item"><span class="item-name">زيتون</span><span class="item-price">7 ج</span></div>
+            <div class="menu-item"><span class="item-name">بطاطس</span><span class="item-price">7 ج</span></div>
+            <div class="menu-item"><span class="item-name">باذنجان</span><span class="item-price">3 ج</span></div>
+            <div class="menu-item"><span class="item-name">بسطرمة</span><span class="item-price">14 ج</span></div>
+            <div class="menu-item"><span class="item-name">ليمون معصفر</span><span class="item-price">3 ج</span></div>
+            <div class="menu-item"><span class="item-name">طماطم مخللة</span><span class="item-price">4 ج</span></div>
+            <div class="menu-item"><span class="item-name">اضافة حشو محشية</span><span class="item-price">3 ج</span></div>
+            <div class="menu-item"><span class="item-name">طعمية</span><span class="item-price">4 ج</span></div>
+            <div class="menu-item"><span class="item-name">جبنة طماطم</span><span class="item-price">7 ج</span></div>
+            <div class="menu-item"><span class="item-name">مش</span><span class="item-price">10 ج</span></div>
+            <div class="menu-item"><span class="item-name">بسطرمة</span><span class="item-price">14 ج</span></div>
+            <div class="menu-item"><span class="item-name">كيري</span><span class="item-price">13 ج</span></div>
+            <div class="menu-item"><span class="item-name">ميكس جبن</span><span class="item-price">15 ج</span></div>
+            <div class="menu-item"><span class="item-name">كاتشب</span><span class="item-price">3 ج</span></div>
+            <div class="menu-item"><span class="item-name">مايونيز</span><span class="item-price">5 ج</span></div>
+            <div class="menu-item"><span class="item-name">ثومية</span><span class="item-price">5 ج</span></div>
+            <div class="menu-item"><span class="item-name">شيدر</span><span class="item-price">10 ج</span></div>
+            <div class="menu-item"><span class="item-name">قطعة كيري</span><span class="item-price">13 ج</span></div>
+        </div>
+    </div>
+
+    <!-- المعلبات والسايب -->
+    <div class="menu-section">
+        <h2 class="section-title">المعلبات والسايب</h2>
+        <div class="item-list">
+            <div class="menu-item">
+                <span class="item-name">علبة فول سادة</span>
+                <div class="price-grid"><span class="price-tag">ص: 15ج</span><span class="price-tag">و: 25ج</span><span class="price-tag">ك: 36ج</span></div>
+            </div>
+            <div class="menu-item">
+                <span class="item-name">علبة فول محوج</span>
+                <div class="price-grid"><span class="price-tag">ص: 20ج</span><span class="price-tag">و: 33ج</span><span class="price-tag">ك: 38ج</span></div>
+            </div>
+            <div class="menu-item">
+                <span class="item-name">علبة فول زيت ذرة أو اسكندراني</span>
+                <div class="price-grid"><span class="price-tag">ص: 22ج</span><span class="price-tag">و: 36ج</span><span class="price-tag">ك: 41ج</span></div>
+            </div>
+            <div class="menu-item">
+                <span class="item-name">علبة فول زيت زيتون</span>
+                <div class="price-grid"><span class="price-tag">ص: 25ج</span><span class="price-tag">و: 40ج</span><span class="price-tag">ك: 45ج</span></div>
+            </div>
+            <div class="menu-item">
+                <span class="item-name">علبة عجينة طعمية</span>
+                <div class="price-grid"><span class="price-tag">و: 25ج</span><span class="price-tag">ك: 36ج</span></div>
+            </div>
+            <div class="menu-item"><span class="item-name">علبة بابا غنوج / جبنة طماطم / مسقعة</span><span class="item-price">20 ج</span></div>
+            <div class="menu-item"><span class="item-name">علبة باذنجان مخلل أو مقلي</span><span class="item-price">15 ج</span></div>
+            <div class="menu-item"><span class="item-name">علبة طحينة / مخلل / خيار مخلل</span><span class="item-price">10 ج</span></div>
+            <div class="menu-item"><span class="item-name">كيس شيبسي / باكت بطاطس</span><span class="item-price">20 ج</span></div>
+            <div class="menu-item"><span class="item-name">باكت صوابع كريسبي <span class="new-badge">جديد</span></span><span class="item-price">25 ج</span></div>
+            <div class="menu-item"><span class="item-name">قرص طعمية ( سادة )</span><span class="item-price">5 ج</span></div>
+            <div class="menu-item"><span class="item-name">قرص طعمية ( كبير / محشية بالخلطة )</span><span class="item-price">7 ج</span></div>
+            <div class="menu-item"><span class="item-name">قرص طعمية محشية كيري</span><span class="item-price">18 ج</span></div>
+            <div class="menu-item"><span class="item-name">قرص عجة بلدي</span><span class="item-price">10 ج</span></div>
+            <div class="menu-item"><span class="item-name">2 عيش شامي ( نجف الملوك )</span><span class="item-price">6 ج</span></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 مطعم نجف - جميع الحقوق محفوظة</p>
+    </footer>
+</div>
+<div class="menu-section">
+    <h2 class="section-title">الركن السوري الشرقي</h2>
+    <div class="item-list">
+        <div class="menu-item"><span class="item-name">ساندوتش طعمية</span><span class="item-price">27 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش طعمية محشية</span><span class="item-price">29 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش صوابع كاتشب أو سلطة</span><span class="item-price">30 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش صوابع كاتشب و مايونيز</span><span class="item-price">35 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش صوابع بالجبنة الرومي</span><span class="item-price">38 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش صوابع بالجبنة الشيدر</span><span class="item-price">41 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش صوابع صوص الجبنة الشيدر</span><span class="item-price">38 ج</span></div>
+        <div class="menu-item"><span class="item-name">ساندوتش ثومية / مايونيز</span><span class="item-price">35 ج</span></div>
+    </div>
+</div>
+<div class="menu-section">
+    <h2 class="section-title">الأومليت</h2>
+    <div class="item-list">
+        <div class="menu-item"><span class="item-name">بيض شكشوكة</span><span class="item-price">23 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض مسلوق</span><span class="item-price">18 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض مقلي</span><span class="item-price">20 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض بالبسطرمة عيش شامي</span><span class="item-price">30 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض بالبسطرمة عيش كايزر</span><span class="item-price">33 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض أومليت بالخضار</span><span class="item-price">22 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض أومليت بالجبنة الرومي</span><span class="item-price">30 ج</span></div>
+        <div class="menu-item"><span class="item-name">بيض أومليت بالجبنة الشيدر</span><span class="item-price">30 ج</span></div>
+    </div>
+</div>
+<div class="menu-section">
+    <h2 class="section-title">متنوع</h2>
+    <div class="item-list">
+        <div class="menu-item"><span class="item-name">جبنة بالطماطم</span><span class="item-price">18 ج</span></div>
+        <div class="menu-item"><span class="item-name">مسقعة - باذنجان مقلي</span><span class="item-price">18 ج</span></div>
+        <div class="menu-item"><span class="item-name">صوابع كريسبي</span><span class="item-price">23 ج</span></div>
+        <div class="menu-item"><span class="item-name">بابا غنوج</span><span class="item-price">18 ج</span></div>
+        <div class="menu-item"><span class="item-name">جبنة بالطماطم على بيض مسلوق</span><span class="item-price">28 ج</span></div>
+        <div class="menu-item"><span class="item-name">جبنة رومي مقلية (عيش شامي)</span><span class="item-price">30 ج</span></div>
+        <div class="menu-item"><span class="item-name">جبنة مقلية (عيش فرنساوي 2 قطعة)</span><span class="item-price">35 ج</span></div>
+        <div class="menu-item">
+            <div class="item-info"><span class="item-name">صاروخ نجف في عيش فرنساوي</span><span class="item-desc">فول + طعمية + بطاطس + بابا غنوج + بيض</span></div>
+            <span class="item-price">38 ج</span>
+        </div>
+        <div class="menu-item">
+            <div class="item-info"><span class="item-name">ديناميت نجف بالبيض</span><span class="item-desc">فول + طعمية + بطاطس + بابا غنوج + بيض + باذنجان</span></div>
+            <span class="item-price">34 ج</span>
+        </div>
+        <div class="menu-item">
+            <div class="item-info"><span class="item-name">ديناميت نجف بدون بيض</span><span class="item-desc">فول + طعمية + بطاطس + بابا غنوج + باذنجان</span></div>
+            <span class="item-price">24 ج</span>
+        </div>
+        <div class="menu-item">
+            <div class="item-info"><span class="item-name">ساندوتش طعمية ديلوكس</span><span class="item-desc">قرص طعمية كبير + شرائح طماطم + خيار + طحينة + كابوتشا</span></div>
+            <span class="item-price">25 ج</span>
+        </div>
+        <div class="menu-item">
+            <div class="item-info"><span class="item-name">بيتزا جامبو نجف</span><span class="item-desc">بيض + سوسيس + جبنة رومي + زيتون + طماطم + فلفل رومي</span></div>
+            <span class="item-price">35 ج</span>
+        </div>
+    </div>
+</div>
+<div class="menu-item" style="background: #fff9f0; border: 1px dashed var(--primary-color);">
+    <div class="item-info">
+        <span class="item-name">إضافة كومبو <span class="new-badge">مميز</span></span>
+        <span class="item-desc">بيج كولا + فرايز + ثومية أو طحينة</span>
+    </div>
+    <span class="item-price">30 ج</span>
+</div>
+
+<script>
+    function searchMenu() {
+        let input = document.getElementById('searchInput').value.toLowerCase();
+        let items = document.getElementsByClassName('menu-item');
+        let sections = document.getElementsByClassName('menu-section');
+
+        for (let i = 0; i < items.length; i++) {
+            let itemName = items[i].getElementsByClassName('item-name')[0].innerText.toLowerCase();
+            if (itemName.includes(input)) {
+                items[i].style.display = "flex";
+            } else {
+                items[i].style.display = "none";
+            }
+        }
+
+        for (let j = 0; j < sections.length; j++) {
+            let visibleItems = sections[j].querySelectorAll('.menu-item[style="display: flex;"]');
+            if (input === "") {
+                sections[j].style.display = "block";
+                for (let k = 0; k < items.length; k++) items[k].style.display = "flex";
+            } else if (visibleItems.length === 0) {
+                sections[j].style.display = "none";
+            } else {
+                sections[j].style.display = "block";
+            }
+        }
+    }
+    function filterSections() {
+    let selectedCategory = document.getElementById('categoryFilter').value;
+    let sections = document.getElementsByClassName('menu-section');
+    let searchInput = document.getElementById('searchInput');
+    
+    // إعادة تعيين خانة البحث عند تغيير القسم (اختياري)
+    // searchInput.value = ""; 
+
+    for (let i = 0; i < sections.length; i++) {
+        let sectionTitle = sections[i].getElementsByClassName('section-title')[0].innerText.trim();
+        
+        if (selectedCategory === "all") {
+            sections[i].style.display = "block";
+        } else if (sectionTitle === selectedCategory) {
+            sections[i].style.display = "block";
+            // تمرير الشاشة تلقائياً للقسم المختار
+            sections[i].scrollIntoView({ behavior: 'smooth' });
+        } else {
+            sections[i].style.display = "none";
+        }
+    }
+}
+
+// تعديل دالة البحث لتعمل مع الفلتر
+function searchMenu() {
+    let input = document.getElementById('searchInput').value.toLowerCase();
+    let sections = document.getElementsByClassName('menu-section');
+    let selectedCategory = document.getElementById('categoryFilter').value;
+
+    for (let i = 0; i < sections.length; i++) {
+        let sectionTitle = sections[i].getElementsByClassName('section-title')[0].innerText.trim();
+        let items = sections[i].getElementsByClassName('menu-item');
+        let hasVisibleItems = false;
+
+        // أولاً نتأكد أن القسم مسموح بظهوره حسب فلتر الأقسام
+        if (selectedCategory === "all" || sectionTitle === selectedCategory) {
+            
+            for (let j = 0; j < items.length; j++) {
+                let itemName = items[j].getElementsByClassName('item-name')[0].innerText.toLowerCase();
+                if (itemName.includes(input)) {
+                    items[j].style.display = "flex";
+                    hasVisibleItems = true;
+                } else {
+                    items[j].style.display = "none";
+                }
+            }
+
+            // إظهار القسم فقط إذا كان فيه عناصر تطابق البحث
+            sections[i].style.display = hasVisibleItems ? "block" : "none";
+        } else {
+            // إذا لم يكن القسم هو المختار في الفلتر، نخفيه تماماً
+            sections[i].style.display = "none";
+        }
+    }
+}
+// مصفوفة لتخزين الأقسام المختارة
+let selectedCategories = ['all'];
+
+function toggleFilter(button, category) {
+    if (category === 'all') {
+        selectedCategories = ['all'];
+        // إعادة ضبط كل الأزرار
+        let buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+    } else {
+        // إزالة "الكل" إذا تم اختيار قسم معين
+        const allBtn = document.querySelector('.filter-btn[onclick*="all"]');
+        allBtn.classList.remove('active');
+        
+        if (selectedCategories.includes('all')) {
+            selectedCategories = [];
+        }
+
+        // إضافة أو إزالة القسم من المصفوفة
+        if (selectedCategories.includes(category)) {
+            selectedCategories = selectedCategories.filter(item => item !== category);
+            button.classList.remove('active');
+        } else {
+            selectedCategories.push(category);
+            button.classList.add('active');
+        }
+
+        // إذا أصبحت المصفوفة فارغة، ارجع لـ "الكل" تلقائياً
+        if (selectedCategories.length === 0) {
+            selectedCategories = ['all'];
+            allBtn.classList.add('active');
+        }
+    }
+    
+    filterMenu(); // تحديث العرض
+}
+
+function filterMenu() {
+    let input = document.getElementById('searchInput').value.toLowerCase();
+    let sections = document.getElementsByClassName('menu-section');
+
+    for (let i = 0; i < sections.length; i++) {
+        let sectionTitle = sections[i].getElementsByClassName('section-title')[0].innerText.trim();
+        let items = sections[i].getElementsByClassName('menu-item');
+        let hasVisibleItems = false;
+
+        // التحقق من شرط القسم: هل القسم ضمن المختارات أو مختار "الكل"؟
+        let isCategorySelected = selectedCategories.includes('all') || selectedCategories.includes(sectionTitle);
+
+        if (isCategorySelected) {
+            // التحقق من شرط البحث داخل القسم المختار
+            for (let j = 0; j < items.length; j++) {
+                let itemName = items[j].getElementsByClassName('item-name')[0].innerText.toLowerCase();
+                if (itemName.includes(input)) {
+                    items[j].style.display = "flex";
+                    hasVisibleItems = true;
+                } else {
+                    items[j].style.display = "none";
+                }
+            }
+            // إظهار القسم إذا كان به عناصر مطابقة للبحث
+            sections[i].style.display = hasVisibleItems ? "block" : "none";
+        } else {
+            // إخفاء القسم تماماً إذا لم يكن مختاراً
+            sections[i].style.display = "none";
+        }
+    }
+}
+
+// ربط خانة البحث بالدالة الجديدة
+function searchMenu() {
+    filterMenu();
+}
+</script>
+
+</body>
+</html>
